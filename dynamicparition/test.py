@@ -10,10 +10,12 @@ class MemoryManager:
         self.history = []  # 操作历史
         self.current_history_index = -1
 
+    # 获取内存使用率
     def get_memory_usage(self):
         used_memory = sum(block['size'] for block in self.allocated_blocks.values())
         return (used_memory / self.total_memory) * 100
 
+    # 获取内存碎片化程度
     def get_fragmentation(self):
         if not self.free_blocks:
             return 0
@@ -21,6 +23,7 @@ class MemoryManager:
         max_free = max(block['size'] for block in self.free_blocks)
         return ((max_free / total_free) - 1) * 100 if total_free > 0 else 0
 
+    # 保存当前状态
     def save_state(self):
         self.current_history_index += 1
         self.history = self.history[:self.current_history_index]
@@ -30,6 +33,7 @@ class MemoryManager:
             'next_process_id': self.next_process_id
         })
 
+    # 撤销操作
     def undo(self):
         if self.current_history_index > 0:
             self.current_history_index -= 1
@@ -40,6 +44,7 @@ class MemoryManager:
             return True
         return False
 
+    # 重做操作
     def redo(self):
         if self.current_history_index < len(self.history) - 1:
             self.current_history_index += 1
@@ -50,6 +55,7 @@ class MemoryManager:
             return True
         return False
 
+    # 分配内存
     def allocate(self, size, algorithm):
         self.save_state()
         if algorithm == 'first_fit':
@@ -60,12 +66,14 @@ class MemoryManager:
             return self._allocate_worst_fit(size)
         return None
 
+    # 使用首次适应算法分配内存
     def _allocate_first_fit(self, size):
         for i, block in enumerate(self.free_blocks):
             if block['size'] >= size:
                 return self._split_block(i, block, size)
         return None
 
+    # 使用最佳适应算法分配内存
     def _allocate_best_fit(self, size):
         best_idx = -1
         min_size = float('inf')
@@ -77,6 +85,7 @@ class MemoryManager:
             return None
         return self._split_block(best_idx, self.free_blocks[best_idx], size)
 
+    # 使用最差适应算法分配内存
     def _allocate_worst_fit(self, size):
         if not self.free_blocks:
             return None
@@ -87,6 +96,7 @@ class MemoryManager:
             return None
         return self._split_block(worst_idx, block, size)
 
+    # 分割内存块
     def _split_block(self, index, block, size):
         new_start = block['start'] + size
         new_size = block['size'] - size
@@ -98,6 +108,7 @@ class MemoryManager:
         self.next_process_id += 1
         return pid
 
+    # 释放内存
     def deallocate(self, pid):
         self.save_state()
         if pid not in self.allocated_blocks:
@@ -108,6 +119,7 @@ class MemoryManager:
         self._merge_blocks()
         return True
 
+    # 合并相邻的内存块
     def _merge_blocks(self):
         self.free_blocks.sort(key=lambda x: x['start'])
         i = 0
@@ -119,7 +131,6 @@ class MemoryManager:
                 del self.free_blocks[i+1]
             else:
                 i += 1
-
 class MemorySimulator:
     def __init__(self, root):
         self.root = root
@@ -130,6 +141,7 @@ class MemorySimulator:
         self.setup_shortcuts()
 
     def setup_shortcuts(self):
+        # 绑定快捷键
         self.root.bind('<Control-z>', lambda e: self.handle_undo())
         self.root.bind('<Control-y>', lambda e: self.handle_redo())
         self.root.bind('<Return>', lambda e: self.handle_allocate())
@@ -148,10 +160,10 @@ class MemorySimulator:
         # 添加工具栏
         toolbar = tk.Frame(self.root, bg='#f0f0f0')
         toolbar.pack(side=tk.TOP, fill=tk.X, padx=10, pady=5)
-        
+
         ttk.Button(toolbar, text="撤销 (Ctrl+Z)", command=self.handle_undo).pack(side=tk.LEFT, padx=2)
         ttk.Button(toolbar, text="重做 (Ctrl+Y)", command=self.handle_redo).pack(side=tk.LEFT, padx=2)
-        
+
         # 添加内存大小设置
         ttk.Label(toolbar, text="总内存大小:").pack(side=tk.LEFT, padx=5)
         self.total_memory_var = tk.StringVar(value="1024")
@@ -166,7 +178,7 @@ class MemorySimulator:
         # 内存可视化区域
         canvas_frame = tk.Frame(left_frame, bg='#f0f0f0')
         canvas_frame.pack(fill=tk.X, pady=(0, 10))
-        
+
         self.canvas = tk.Canvas(canvas_frame, height=120, bg='white', highlightthickness=1, highlightbackground='#cccccc')
         self.canvas.pack(fill=tk.X)
         self.canvas.bind('<Motion>', self.show_hover_info)
@@ -227,17 +239,17 @@ class MemorySimulator:
         # 信息显示
         info_frame = ttk.LabelFrame(right_frame, text="操作日志", padding=10)
         info_frame.pack(fill=tk.BOTH, expand=True)
-        self.info_text = tk.Text(info_frame, height=10, width=30, bg='white', 
+        self.info_text = tk.Text(info_frame, height=10, width=30, bg='white',
                                font=('Consolas', 9), padx=5, pady=5)
         self.info_text.pack(fill=tk.BOTH, expand=True)
 
         # 添加状态栏
         status_frame = tk.Frame(self.root, bg='#f0f0f0')
         status_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=5)
-        
+
         self.usage_label = tk.Label(status_frame, text="内存使用率: 0%", bg='#f0f0f0', font=('微软雅黑', 9))
         self.usage_label.pack(side=tk.LEFT, padx=5)
-        
+
         self.frag_label = tk.Label(status_frame, text="碎片率: 0%", bg='#f0f0f0', font=('微软雅黑', 9))
         self.frag_label.pack(side=tk.LEFT, padx=5)
 
@@ -246,7 +258,7 @@ class MemorySimulator:
         x = event.x
         total = self.memory.total_memory
         width = self.canvas.winfo_width()
-        
+
         for pid, info in self.memory.allocated_blocks.items():
             x1 = (info['start'] / total) * width
             x2 = ((info['start'] + info['size']) / total) * width
@@ -279,11 +291,13 @@ class MemorySimulator:
             messagebox.showerror("错误", "请输入有效的正整数大小")
 
     def handle_undo(self):
+        # 撤销上一步操作
         if self.memory.undo():
             self.update_display()
             self.info_text.insert(tk.END, "已撤销上一步操作\n")
 
     def handle_redo(self):
+        # 重做操作
         if self.memory.redo():
             self.update_display()
             self.info_text.insert(tk.END, "已重做操作\n")
