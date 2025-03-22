@@ -1,8 +1,8 @@
 # main.py
 import tkinter as tk
 from tkinter import ttk, messagebox
-from dynamic_partition import DynamicPartitionManager
-from dynamic_paging import PagingManager
+from temp.dynamic_partition import DynamicPartitionManager
+from temp.dynamic_paging import PagingManager
 
 
 class MemoryManagementApp:
