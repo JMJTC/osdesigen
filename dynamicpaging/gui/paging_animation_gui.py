@@ -1,5 +1,4 @@
 import tkinter as tk
-import simulation.paging_simulation
 from simulation.paging_simulation import PagingSimulation
 
 ANIMATION_DURATION = 800  # 动画持续时间(毫秒)
@@ -162,3 +161,6 @@ class PagingAnimationGUI:
         for line in self.sim.log_lines:
             self.log_text.insert(tk.END, line + "\n")
         self.log_text.see(tk.END)
+
+if __name__ == "__main__":
+    print("hello,我们来模拟一下分页系统吧！")
