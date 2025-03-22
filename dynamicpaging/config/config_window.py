@@ -1,13 +1,21 @@
 import tkinter as tk
 from tkinter import messagebox
-from paging_simulation import PagingSimulation
-from paging_animation_gui import PagingAnimationGUI
+from simulation.paging_simulation import PagingSimulation
+from gui.paging_animation_gui import PagingAnimationGUI
 
-MEMORY_SIZE = 64 * 1024    # 64KB
-BLOCK_SIZE = 1024          # 每块 1KB
+MEMORY_SIZE = 64 * 1024  # 64KB
+BLOCK_SIZE = 1024  # 每块 1KB
 MAX_BLOCKS = MEMORY_SIZE // BLOCK_SIZE  # 64
-MAX_PAGES = 64             # 作业最多可有 64 页(页号范围 0~63)
+MAX_PAGES = 64  # 作业最多可有 64 页(页号范围 0~63)
+OFFSET_MAX = BLOCK_SIZE  # 页内地址最大值(0~1023)
+ANIMATION_DURATION = 800  # 动画持续时间(毫秒)
 
+
+# --------------------------
+# 配置窗口：用户输入
+#  1. 作业页数(1~64)
+#  2. 给作业分配的具体物理块号(逗号分隔)
+# --------------------------
 class ConfigWindow:
     def __init__(self, root):
         self.root = root
@@ -35,14 +43,11 @@ class ConfigWindow:
     def start_sim(self):
         pages_str = self.entry_pages.get().strip()
         frames_str = self.entry_frames.get().strip()
-
-        # 检查作业页数输入是否为整数
         if not pages_str.isdigit():
             messagebox.showerror("输入错误", "作业页数必须是整数！")
             return
 
         num_pages = int(pages_str)
-        # 检查作业页数是否在有效范围内
         if not (1 <= num_pages <= MAX_PAGES):
             messagebox.showerror("输入错误", f"作业页数必须在1~{MAX_PAGES}之间！")
             return
@@ -50,7 +55,7 @@ class ConfigWindow:
         # 解析物理块号列表
         try:
             allocated_frames_list = [int(x.strip()) for x in frames_str.split(",") if x.strip() != ""]
-        except ValueError:
+        except:
             messagebox.showerror("输入错误", "分配的物理块号格式错误，请输入逗号分隔的整数。")
             return
 
@@ -74,3 +79,4 @@ class ConfigWindow:
         # 启动模拟界面
         self.sim_window = tk.Toplevel(self.root)
         PagingAnimationGUI(self.sim_window, num_pages, allocated_frames_list)
+
