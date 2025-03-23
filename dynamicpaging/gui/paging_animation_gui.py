@@ -10,7 +10,7 @@ ANIMATION_DURATION = 800  # 动画持续时间(毫秒)
 class PagingAnimationGUI:
     def __init__(self, root, num_pages, allocated_frames_list):
         self.root = root
-        self.root.title("请求分页管理模拟 - 交互动画")
+        self.root.title("请求分页管理模拟")
         self.sim = PagingSimulation(num_pages, allocated_frames_list)
 
         # 操作输入区
