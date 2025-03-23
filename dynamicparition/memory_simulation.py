@@ -55,6 +55,7 @@ class MemorySimulator:
         self.canvas = tk.Canvas(canvas_frame, height=120, bg='white', highlightthickness=1,
                                 highlightbackground='#cccccc')
         self.canvas.pack(fill=tk.X)
+        # 绑定鼠标移动事件
         self.canvas.bind('<Motion>', self.show_hover_info)
 
         # 分区表
