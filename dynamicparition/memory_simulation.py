@@ -5,6 +5,7 @@ from memory_manager import MemoryManager
 
 class MemorySimulator:
     def __init__(self, root):
+        # 初始化函数，设置根窗口，内存管理器，整体样式，创建小部件，更新显示，设置快捷键
         self.root = root
         self.memory = MemoryManager(1024)
         self.root.configure(bg='#f0f0f0')
@@ -132,6 +133,7 @@ class MemorySimulator:
         total = self.memory.total_memory
         width = self.canvas.winfo_width()
 
+        # 遍历已分配的内存块
         for pid, info in self.memory.allocated_blocks.items():
             x1 = (info['start'] / total) * width
             x2 = ((info['start'] + info['size']) / total) * width
@@ -141,6 +143,7 @@ class MemorySimulator:
                                         fill='blue', tags="hover", font=('微软雅黑', 8))
                 return
 
+        # 遍历空闲的内存块
         for block in self.memory.free_blocks:
             x1 = (block['start'] / total) * width
             x2 = ((block['start'] + block['size']) / total) * width
