@@ -79,4 +79,3 @@ class ConfigWindow:
         # 启动模拟界面
         self.sim_window = tk.Toplevel(self.root)
         PagingAnimationGUI(self.sim_window, num_pages, allocated_frames_list)
-

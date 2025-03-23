@@ -66,23 +66,33 @@ class PagingAnimationGUI:
 
         # 绘制分配给作业的物理块
         x0, y0 = 50, 50
-        w, h = 80, 40
+        w, h = 60, 40
         gap = 20
+        count = 0
         for frame_no in self.sim.allocated_frames_list:
             rect_id = self.canvas.create_rectangle(x0, y0, x0 + w, y0 + h, fill="#f0f0f0")
             text_id = self.canvas.create_text(x0 + w / 2, y0 + h / 2, text=f"Frame {frame_no}", font=("Arial", 10))
             self.frame_rects.append((rect_id, text_id, frame_no))
             x0 += (w + gap)
+            count += 1
+            if count % 8 == 0:
+                x0 = 50
+                y0 += (h + gap)
 
         # 绘制作业的页
-        x0, y0 = 50, 150
+        x0, y0 = 50, 100 + 70 * (count / 8)
         w, h = 40, 30
         gap = 10
+        count = 0
         for page_no in range(self.sim.num_pages):
             rect_id = self.canvas.create_rectangle(x0, y0, x0 + w, y0 + h, fill="#e0ffff")
             text_id = self.canvas.create_text(x0 + w / 2, y0 + h / 2, text=f"P{page_no}", font=("Arial", 10))
             self.page_rects.append((rect_id, text_id, page_no))
             x0 += (w + gap)
+            count += 1
+            if count % 8 == 0:
+                x0 = 50
+                y0 += (h + gap)
 
         self.update_canvas_state()
 
