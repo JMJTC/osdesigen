@@ -14,11 +14,16 @@ class MemoryManager:
 
     # 获取内存碎片化程度
     def get_fragmentation(self):
+        # 如果没有空闲块，则返回0
         if not self.free_blocks:
             return 0
+        # 计算所有空闲块的总大小
         total_free = sum(block['size'] for block in self.free_blocks)
+        # 计算最大的空闲块大小
         max_free = max(block['size'] for block in self.free_blocks)
-        return ((max_free / total_free) - 1) * 100 if total_free > 0 else 0
+        # 返回最大空闲块大小与总空闲块大小的比例差值，乘以100，如果总空闲块大小大于0，否则返回0
+        # 内存碎片率 FR 可以用公式 \(FR = (T - M) / T \times 100\%\) 来计算。
+        return ((total_free - max_free) / total_free) * 100 if total_free > 0 else 0
 
     # 保存当前状态
     def save_state(self):
@@ -53,6 +58,7 @@ class MemoryManager:
         return False
 
     # 分配内存
+    # 可用策略模式优化
     def allocate(self, size, algorithm):
         self.save_state()
         if algorithm == 'first_fit':

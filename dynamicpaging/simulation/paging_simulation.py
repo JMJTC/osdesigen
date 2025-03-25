@@ -73,12 +73,13 @@ class PagingSimulation:
             # 命中
             frame = entry.frame
             phys_addr = frame * BLOCK_SIZE + offset
-            msg = f"访问页 {page_no} -> 命中, 物理地址={phys_addr}, 无缺页"
             if op == "save":
                 entry.modified = True
+            msg = f"操作：{op} 访问页 {page_no} -> 命中, 物理地址={phys_addr}, 无缺页 " + (
+                f"修改页 {page_no}" if entry.modified else "")
         else:
             # 缺页中断
-            msg = f"访问页 {page_no} -> 缺页中断, "
+            msg = f"操作：{op} 访问页 {page_no} -> 缺页中断, "
             # 若 FIFO 队列尚未装满 allocated_frames_list 的容量，就找空闲块
             if len(self.fifo_queue) < len(self.allocated_frames_list):
                 frame = self.find_free_frame()
@@ -106,6 +107,7 @@ class PagingSimulation:
 
             phys_addr = frame * BLOCK_SIZE + offset
             msg += f"装入页 {page_no}, 物理地址={phys_addr}"
+            msg += f"  修改页 {page_no}" if entry.modified else ""
 
         self.log(msg)
         return msg, replaced_page, loaded_page

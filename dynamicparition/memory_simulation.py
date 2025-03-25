@@ -119,52 +119,82 @@ class MemorySimulator:
         self.info_text.pack(fill=tk.BOTH, expand=True)
 
         # 添加状态栏
-        status_frame = tk.Frame(self.root, bg='#f0f0f0')
+        # 创建一个Frame，用于显示内存使用率和碎片率
+        # 创建一个Frame，用于显示状态信息
+        status_frame = tk.Frame(left_frame, bg='#f0f0f0')
+        # 将Frame放置在left_frame的底部，并填充水平空间，设置内边距
         status_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=5)
 
+        # 创建一个Label，用于显示内存使用率
+        # 创建一个标签，用于显示内存使用率
         self.usage_label = tk.Label(status_frame, text="内存使用率: 0%", bg='#f0f0f0', font=('微软雅黑', 9))
-        self.usage_label.pack(side=tk.LEFT, padx=5)
+        # 将标签放置在status_frame中，并填充整个区域，左右各留出5个像素的间距
+        self.usage_label.pack(fill=tk.BOTH, padx=5)
 
+        # 创建一个Label，用于显示碎片率
         self.frag_label = tk.Label(status_frame, text="碎片率: 0%", bg='#f0f0f0', font=('微软雅黑', 9))
-        self.frag_label.pack(side=tk.LEFT, padx=5)
+        self.frag_label.pack(fill=tk.BOTH, padx=5)
+
 
     def show_hover_info(self, event):
         # 获取鼠标位置对应的内存块信息
+        # 获取鼠标点击位置的x坐标
         x = event.x
+        # 获取内存总大小
         total = self.memory.total_memory
+        # 获取画布的宽度
         width = self.canvas.winfo_width()
 
         # 遍历已分配的内存块
         for pid, info in self.memory.allocated_blocks.items():
+            # 计算内存块在画布上的起始位置
             x1 = (info['start'] / total) * width
+            # 计算内存块在画布上的结束位置
             x2 = ((info['start'] + info['size']) / total) * width
+            # 如果鼠标位置在内存块内
             if x1 <= x <= x2:
+                # 删除之前的提示信息
                 self.canvas.delete("hover")
+                # 在鼠标位置显示提示信息
                 self.canvas.create_text(x, 20, text=f"进程 {pid}\n大小: {info['size']}KB",
                                         fill='blue', tags="hover", font=('微软雅黑', 8))
+                # 返回，不再继续遍历
                 return
 
-        # 遍历空闲的内存块
+        # 遍历内存中的空闲块
         for block in self.memory.free_blocks:
+            # 计算空闲块在画布上的起始位置
             x1 = (block['start'] / total) * width
+            # 计算空闲块在画布上的结束位置
             x2 = ((block['start'] + block['size']) / total) * width
+            # 如果鼠标位置在空闲块范围内
             if x1 <= x <= x2:
+                # 删除之前的提示信息
                 self.canvas.delete("hover")
+                # 在鼠标位置显示空闲块的大小
                 self.canvas.create_text(x, 20, text=f"空闲块\n大小: {block['size']}KB",
                                         fill='red', tags="hover", font=('微软雅黑', 8))
+                # 返回，不再继续遍历
                 return
 
+        # 如果鼠标位置不在任何空闲块范围内，删除之前的提示信息
         self.canvas.delete("hover")
 
     def set_total_memory(self):
         try:
+            # 获取用户输入的内存大小
             new_size = int(self.total_memory_var.get())
+            # 如果用户输入的内存大小小于等于0，则抛出异常
             if new_size <= 0:
                 raise ValueError
+            # 创建新的内存管理器
             self.memory = MemoryManager(new_size)
+            # 更新显示
             self.update_display()
+            # 在信息框中插入设置后的内存大小
             self.info_text.insert(tk.END, f"内存大小已设置为 {new_size}KB\n")
         except:
+            # 如果用户输入的内存大小无效，则弹出错误提示框
             messagebox.showerror("错误", "请输入有效的正整数大小")
 
     def handle_undo(self):
@@ -182,34 +212,51 @@ class MemorySimulator:
     def update_display(self):
         # 更新Canvas显示
         self.canvas.delete("all")
+        # 获取总内存
         total = self.memory.total_memory
+        # 获取Canvas宽度
         width = self.canvas.winfo_width()
 
         # 收集所有块
+        # 创建一个空列表，用于存储内存块信息
         blocks = []
+        # 遍历已分配的内存块
         for pid, info in self.memory.allocated_blocks.items():
+            # 将已分配的内存块信息添加到列表中
             blocks.append((info['start'], info['size'], 'allocated', pid))
+        # 遍历空闲的内存块
         for block in self.memory.free_blocks:
+            # 将空闲的内存块信息添加到列表中
             blocks.append((block['start'], block['size'], 'free', None))
+        # 对内存块信息进行排序
         blocks.sort()
 
         # 绘制块
+        # 遍历每个块
         for start, size, typ, pid in blocks:
+            # 计算块在画布上的位置
             x1 = (start / total) * width
             x2 = ((start + size) / total) * width
+            # 根据块类型设置颜色
             color = '#4CAF50' if typ == 'free' else '#2196F3'  # 使用更柔和的颜色
+            # 在画布上绘制矩形
             self.canvas.create_rectangle(x1, 10, x2, 90, fill=color, outline='#ffffff')
+            # 在矩形上绘制文本
             text = f"{start}-{start + size}\n{size}KB"
             self.canvas.create_text((x1 + x2) / 2, 50, text=text, fill='white', font=('微软雅黑', 8))
 
         # 更新表格
+        # 清空free_table中的所有行
         for row in self.free_table.get_children():
             self.free_table.delete(row)
+        # 将free_blocks中的每个block插入到free_table中
         for block in self.memory.free_blocks:
             self.free_table.insert("", 'end', values=(block['start'], block['size']))
 
+        # 清空alloc_table中的所有行
         for row in self.alloc_table.get_children():
             self.alloc_table.delete(row)
+        # 将allocated_blocks中的每个block插入到alloc_table中
         for pid, info in self.memory.allocated_blocks.items():
             self.alloc_table.insert("", 'end', values=(pid, info['start'], info['size']))
 

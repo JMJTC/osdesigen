@@ -109,7 +109,10 @@ class PagingAnimationGUI:
         for (rect_id, text_id, page_no) in self.page_rects:
             entry = self.sim.page_table[page_no]
             if entry.valid:
-                self.canvas.itemconfig(rect_id, fill="#b3ecff")  # 有效页
+                if entry.modified:
+                    self.canvas.itemconfig(rect_id, fill="#ffebcd")  # 已修改页
+                else:
+                    self.canvas.itemconfig(rect_id, fill="#b3ecff")  # 有效页
                 # 在对应的物理块上显示
                 if entry.frame is not None:
                     for (f_rect, f_text, f_no) in self.frame_rects:
@@ -131,7 +134,7 @@ class PagingAnimationGUI:
         offset = int(offset_str)
 
         msg, replaced_page, loaded_page = self.sim.execute(op, page_no, offset)
-        self.log(msg)
+        # self.log(msg)
         self.update_log_display()
 
         # 做简单动画
@@ -152,9 +155,13 @@ class PagingAnimationGUI:
 
         self.root.after(ANIMATION_DURATION, self.update_canvas_state)
 
+    # 定义一个函数，用于在指定时间内将指定矩形的颜色从from_color变为to_color
     def flash_color(self, rect_id, from_color, to_color, duration=500):
+        # 计算动画的一半时间
         half = duration // 2
+        # 将指定矩形的颜色设置为to_color
         self.canvas.itemconfig(rect_id, fill=to_color)
+        # 在动画的一半时间后，将指定矩形的颜色设置为from_color
         self.root.after(half, lambda: self.canvas.itemconfig(rect_id, fill=from_color))
 
     def on_reset(self):
