@@ -68,33 +68,48 @@ class PagingSimulation:
             self.log(msg)
             return msg, None, None
 
+        # 获取页表项
         entry = self.page_table[page_no]
+        # 如果页表项有效
         if entry.valid:
             # 命中
             frame = entry.frame
+            # 计算物理地址
             phys_addr = frame * BLOCK_SIZE + offset
+            # 如果操作是保存
             if op == "save":
+                # 设置页表项为已修改
                 entry.modified = True
+            # 构造消息
             msg = f"操作：{op} 访问页 {page_no} -> 命中, 物理地址={phys_addr}, 无缺页 " + (
                 f"修改页 {page_no}" if entry.modified else "")
         else:
             # 缺页中断
             msg = f"操作：{op} 访问页 {page_no} -> 缺页中断, "
-            # 若 FIFO 队列尚未装满 allocated_frames_list 的容量，就找空闲块
+            # 如果 FIFO 队列尚未装满 allocated_frames_list 的容量
             if len(self.fifo_queue) < len(self.allocated_frames_list):
+                # 找到空闲块
                 frame = self.find_free_frame()
                 msg += f"使用空闲帧 {frame}, "
             else:
                 # FIFO 替换
+                # 弹出 FIFO 队列的第一个元素
                 replaced_page = self.fifo_queue.pop(0)
+                # 获取被替换的页表项
                 replaced_entry = self.page_table[replaced_page]
+                # 获取被替换的帧
                 freed_frame = replaced_entry.frame
+                # 设置被替换的页表项无效
                 replaced_entry.valid = False
+                # 设置被替换的页表项的帧为 None
                 replaced_entry.frame = None
+                # 设置被替换的页表项的修改状态为 False
                 replaced_entry.modified = False
+                # 从已使用帧列表中移除被替换的帧
                 self.used_frames.remove(freed_frame)
 
                 msg += f"淘汰页 {replaced_page}, 释放帧 {freed_frame}, "
+                # 设置当前帧为被替换的帧
                 frame = freed_frame
 
             entry.valid = True

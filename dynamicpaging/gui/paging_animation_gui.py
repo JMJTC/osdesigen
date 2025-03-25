@@ -9,34 +9,43 @@ ANIMATION_DURATION = 800  # 动画持续时间(毫秒)
 # --------------------------
 class PagingAnimationGUI:
     def __init__(self, root, num_pages, allocated_frames_list):
+        # 初始化函数，传入根窗口、页数和已分配的帧列表
         self.root = root
         self.root.title("请求分页管理模拟")
+        # 设置窗口标题
         self.sim = PagingSimulation(num_pages, allocated_frames_list)
+        # 创建分页模拟对象
 
         # 操作输入区
         input_frame = tk.Frame(self.root)
         input_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
+        # 创建输入框框架，并设置位置和填充方式
 
         tk.Label(input_frame, text="页号：").pack(side=tk.LEFT)
         self.entry_page_no = tk.Entry(input_frame, width=5)
         self.entry_page_no.pack(side=tk.LEFT, padx=2)
+        # 创建页号输入框，并设置位置和宽度
 
         tk.Label(input_frame, text="页内地址：").pack(side=tk.LEFT)
         self.entry_offset = tk.Entry(input_frame, width=6)
         self.entry_offset.pack(side=tk.LEFT, padx=2)
+        # 创建页内地址输入框，并设置位置和宽度
 
         self.op_var = tk.StringVar(value="+")
         ops = ["+", "-", "×", "/", "load", "save"]
         for op in ops:
             r = tk.Radiobutton(input_frame, text=op, variable=self.op_var, value=op)
             r.pack(side=tk.LEFT, padx=2)
+        # 创建操作选择框，并设置位置和选项
 
         self.btn_exec = tk.Button(input_frame, text="执行", command=self.on_execute)
         self.btn_exec.pack(side=tk.LEFT, padx=10)
+        # 创建执行按钮，并设置位置和命令
 
         # 画布
         self.canvas = tk.Canvas(self.root, width=700, height=300, bg="white")
         self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        # 创建画布，并设置位置、大小和背景色
 
         # 日志显示
         bottom_frame = tk.Frame(self.root)
@@ -46,17 +55,21 @@ class PagingAnimationGUI:
         scrollbar = tk.Scrollbar(bottom_frame, command=self.log_text.yview)
         scrollbar.pack(side=tk.LEFT, fill=tk.Y)
         self.log_text.config(yscrollcommand=scrollbar.set)
+        # 创建日志显示框，并设置位置、大小、字体和滚动条
 
         self.btn_reset = tk.Button(bottom_frame, text="重置", command=self.on_reset)
         self.btn_reset.pack(side=tk.LEFT, padx=10)
+        # 创建重置按钮，并设置位置和命令
 
         # 可视化数据
         self.frame_rects = []  # (rect_id, text_id, frame_no)
         self.page_rects = []  # (rect_id, text_id, page_no)
+        # 创建可视化数据列表，用于存储帧和页的矩形和文本
 
         # 绘制静态场景
         self.draw_static_scene()
         self.update_log_display()
+        # 绘制静态场景和更新日志显示
 
     def draw_static_scene(self):
         """
@@ -178,6 +191,7 @@ class PagingAnimationGUI:
         for line in self.sim.log_lines:
             self.log_text.insert(tk.END, line + "\n")
         self.log_text.see(tk.END)
+
 
 if __name__ == "__main__":
     print("hello,我们来模拟一下分页系统吧！")
