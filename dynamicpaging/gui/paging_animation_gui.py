@@ -9,72 +9,99 @@ ANIMATION_DURATION = 800  # 动画持续时间(毫秒)
 # --------------------------
 class PagingAnimationGUI:
     def __init__(self, root, num_pages, allocated_frames_list):
-        # 初始化函数，传入根窗口、页数和已分配的帧列表
         self.root = root
         self.root.title("请求分页管理模拟")
-        # 设置窗口标题
         self.sim = PagingSimulation(num_pages, allocated_frames_list)
-        # 创建分页模拟对象
+
+        # 主框架
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
         # 操作输入区
-        input_frame = tk.Frame(self.root)
+        input_frame = tk.Frame(main_frame)
         input_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
-        # 创建输入框框架，并设置位置和填充方式
 
         tk.Label(input_frame, text="页号：").pack(side=tk.LEFT)
         self.entry_page_no = tk.Entry(input_frame, width=5)
         self.entry_page_no.pack(side=tk.LEFT, padx=2)
-        # 创建页号输入框，并设置位置和宽度
 
         tk.Label(input_frame, text="页内地址：").pack(side=tk.LEFT)
         self.entry_offset = tk.Entry(input_frame, width=6)
         self.entry_offset.pack(side=tk.LEFT, padx=2)
-        # 创建页内地址输入框，并设置位置和宽度
 
         self.op_var = tk.StringVar(value="+")
         ops = ["+", "-", "×", "/", "load", "save"]
         for op in ops:
             r = tk.Radiobutton(input_frame, text=op, variable=self.op_var, value=op)
             r.pack(side=tk.LEFT, padx=2)
-        # 创建操作选择框，并设置位置和选项
 
         self.btn_exec = tk.Button(input_frame, text="执行", command=self.on_execute)
         self.btn_exec.pack(side=tk.LEFT, padx=10)
-        # 创建执行按钮，并设置位置和命令
 
+        # 创建左右分栏
+        content_frame = tk.Frame(main_frame)
+        content_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, pady=5)
+
+        # 左侧动画区域
+        left_frame = tk.Frame(content_frame)
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
         # 画布
-        self.canvas = tk.Canvas(self.root, width=700, height=300, bg="white")
+        self.canvas = tk.Canvas(left_frame, width=500, height=300, bg="white")
         self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        # 创建画布，并设置位置、大小和背景色
+
+        # 右侧页表区域
+        right_frame = tk.Frame(content_frame)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5)
+        
+        # 页表显示区域
+        page_table_frame = tk.LabelFrame(right_frame, text="页表")
+        page_table_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+        # 创建页表显示表格
+        self.create_page_table_display(page_table_frame)
 
         # 日志显示
-        bottom_frame = tk.Frame(self.root)
-        bottom_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
-        self.log_text = tk.Text(bottom_frame, width=80, height=8, font=("Consolas", 9))
+        log_frame = tk.Frame(main_frame)
+        log_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
+        
+        self.log_text = tk.Text(log_frame, width=80, height=6, font=("Consolas", 9))
         self.log_text.pack(side=tk.LEFT, padx=5)
-        scrollbar = tk.Scrollbar(bottom_frame, command=self.log_text.yview)
+        scrollbar = tk.Scrollbar(log_frame, command=self.log_text.yview)
         scrollbar.pack(side=tk.LEFT, fill=tk.Y)
         self.log_text.config(yscrollcommand=scrollbar.set)
-        # 创建日志显示框，并设置位置、大小、字体和滚动条
 
-        self.btn_reset = tk.Button(bottom_frame, text="重置", command=self.on_reset)
+        self.btn_reset = tk.Button(log_frame, text="重置", command=self.on_reset)
         self.btn_reset.pack(side=tk.LEFT, padx=10)
-        # 创建重置按钮，并设置位置和命令
 
         # 可视化数据
         self.frame_rects = []  # (rect_id, text_id, frame_no)
         self.page_rects = []  # (rect_id, text_id, page_no)
-        # 创建可视化数据列表，用于存储帧和页的矩形和文本
 
-        # 绘制静态场景
+        # 初始化显示
         self.draw_static_scene()
+        self.update_page_table_display()
         self.update_log_display()
-        # 绘制静态场景和更新日志显示
+
+    def create_page_table_display(self, parent):
+        # 创建表头
+        headers = ["页号", "状态", "物理块号", "修改位"]
+        for col, header in enumerate(headers):
+            tk.Label(parent, text=header, font=("Arial", 10, "bold"), 
+                   relief="ridge", width=12).grid(row=0, column=col, padx=1, pady=1)
+
+        # 创建页表行
+        self.page_table_labels = []
+        for row in range(self.sim.num_pages):
+            row_labels = []
+            for col in range(4):
+                label = tk.Label(parent, text="", relief="ridge", width=12)
+                label.grid(row=row+1, column=col, padx=1, pady=1)
+                row_labels.append(label)
+            self.page_table_labels.append(row_labels)
 
     def draw_static_scene(self):
-        """
-        绘制 allocated_frames_list 对应的方框，以及 num_pages 个“页”。
-        """
+        """绘制静态场景"""
         self.canvas.delete("all")
 
         # 绘制分配给作业的物理块
@@ -110,10 +137,8 @@ class PagingAnimationGUI:
         self.update_canvas_state()
 
     def update_canvas_state(self):
-        """
-        根据 self.sim 的页表状态，更新 Canvas 中各个方框的显示。
-        """
-        # 所有块先恢复“空”状态
+        """更新画布状态"""
+        # 所有块先恢复"空"状态
         for (rect_id, text_id, frame_no) in self.frame_rects:
             self.canvas.itemconfig(rect_id, fill="#f0f0f0")
             self.canvas.itemconfig(text_id, text=f"Frame {frame_no}")
@@ -126,14 +151,32 @@ class PagingAnimationGUI:
                     self.canvas.itemconfig(rect_id, fill="#ffebcd")  # 已修改页
                 else:
                     self.canvas.itemconfig(rect_id, fill="#b3ecff")  # 有效页
-                # 在对应的物理块上显示
-                if entry.frame is not None:
-                    for (f_rect, f_text, f_no) in self.frame_rects:
-                        if f_no == entry.frame:
-                            self.canvas.itemconfig(f_rect, fill="#caffca")
-                            self.canvas.itemconfig(f_text, text=f"Frame {f_no}\n<-P{page_no}")
+                    # 在对应的物理块上显示
+                    if entry.frame is not None:
+                        for (f_rect, f_text, f_no) in self.frame_rects:
+                            if f_no == entry.frame:
+                                self.canvas.itemconfig(f_rect, fill="#caffca")
+                                self.canvas.itemconfig(f_text, text=f"Frame {f_no}\n<-P{page_no}")
             else:
                 self.canvas.itemconfig(rect_id, fill="#e0ffff")
+
+    def update_page_table_display(self):
+        """更新页表显示"""
+        for row, entry in enumerate(self.sim.page_table):
+            # 页号
+            self.page_table_labels[row][0].config(text=f"P{row}")
+            
+            # 状态
+            status = "已加载" if entry.valid else "未加载"
+            self.page_table_labels[row][1].config(text=status)
+            
+            # 物理块号
+            frame = str(entry.frame) if entry.frame is not None else "-"
+            self.page_table_labels[row][2].config(text=frame)
+            
+            # 修改位
+            modified = "是" if entry.modified else "否"
+            self.page_table_labels[row][3].config(text=modified)
 
     def on_execute(self):
         page_str = self.entry_page_no.get().strip()
@@ -147,10 +190,10 @@ class PagingAnimationGUI:
         offset = int(offset_str)
 
         msg, replaced_page, loaded_page = self.sim.execute(op, page_no, offset)
-        # self.log(msg)
         self.update_log_display()
+        self.update_page_table_display()
 
-        # 做简单动画
+        # 执行动画
         self.animate_replacement(replaced_page, loaded_page)
 
     def animate_replacement(self, replaced_page, loaded_page):
@@ -168,19 +211,17 @@ class PagingAnimationGUI:
 
         self.root.after(ANIMATION_DURATION, self.update_canvas_state)
 
-    # 定义一个函数，用于在指定时间内将指定矩形的颜色从from_color变为to_color
     def flash_color(self, rect_id, from_color, to_color, duration=500):
-        # 计算动画的一半时间
+        """颜色闪烁动画"""
         half = duration // 2
-        # 将指定矩形的颜色设置为to_color
         self.canvas.itemconfig(rect_id, fill=to_color)
-        # 在动画的一半时间后，将指定矩形的颜色设置为from_color
         self.root.after(half, lambda: self.canvas.itemconfig(rect_id, fill=from_color))
 
     def on_reset(self):
         self.sim.reset()
         self.log("重置模拟器")
         self.update_canvas_state()
+        self.update_page_table_display()
         self.update_log_display()
 
     def log(self, text):

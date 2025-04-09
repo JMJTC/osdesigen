@@ -80,7 +80,7 @@ class MemoryManager:
         return None
 
     # 使用最佳适应算法分配内存
-    def _allocate_best_fit(self, size):
+    def   _allocate_best_fit(self, size):
         # 初始化最佳索引和最小大小
         best_idx = -1
         min_size = float('inf')
